@@ -15,8 +15,14 @@ if [ ! -f /tmp/tailscale ]; then
     fi
 
     tailscale_version="1.78.1"
+    tailscale_download_url="https://pkgs.tailscale.com/stable/"
+    tailscale_download_url_mirror="https://ts-mirror.xedge.cc/stable/static/"
 
-    latest_version=`wget -O- https://pkgs.tailscale.com/stable/ | grep tailscale_ | head -1 | cut -d'_' -f 2`
+    latest_version=`wget -qO- ${tailscale_download_url_mirror} | grep tailscale_ | tail -n 1 | cut -d'_' -f 2`
+    if [ -z "$latest_version" ]; then
+        latest_version=`wget -qO- ${tailscale_download_url} | grep tailscale_ | head -1 | cut -d'_' -f 2`
+        tailscale_download_url_mirror=${tailscale_download_url}
+    fi
     if [ "$tailscale_version" != "$latest_version" ]; then
         tailscale_version=$latest_version
     fi
@@ -31,7 +37,7 @@ if [ ! -f /tmp/tailscale ]; then
         echo -e "tailscale_${version}/tailscaled" >> /tmp/tailscale_${version}_files.txt
     fi
 
-    wget -O- https://pkgs.tailscale.com/stable/tailscale_${version}.tgz | tar x -zvf - -C /tmp -T /tmp/tailscale_${version}_files.txt
+    wget -O- ${tailscale_download_url_mirror}tailscale_${version}.tgz | tar x -zvf - -C /tmp -T /tmp/tailscale_${version}_files.txt
 
     mv /tmp/tailscale_$version/* /tmp
     rm -rf /tmp/tailscale_${version}*
